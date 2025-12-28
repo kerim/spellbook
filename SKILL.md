@@ -696,6 +696,165 @@ logseq query -g "GRAPH" -p '137'  # Query by db/id
 
 ---
 
+### Query Result Format Quirks (CRITICAL for Parsing)
+
+**IMPORTANT:** Query results have inconsistent key formatting that causes parsing errors if not handled correctly.
+
+#### Property Identifier Prefix Mismatch
+
+**In Queries (Required):** Property identifiers MUST have `:` prefix
+```clojure
+[:find (pull ?b [:user.property/ProjectStatus-IUJoj7Hs])
+ :where [?b :user.property/ProjectStatus-IUJoj7Hs ?val]]
+```
+
+**In Results (No Prefix):** Property keys DON'T have `:` prefix
+```javascript
+{
+  "user.property/ProjectStatus-IUJoj7Hs": {"db/id": 1143},
+  "block/title": "My Block",
+  "db/id": 5424
+}
+```
+
+**Parsing Strategy:**
+```javascript
+// WRONG - assumes prefix exists
+const value = result['`:user.property/ProjectStatus`'];  // undefined!
+
+// CORRECT - check both formats
+const value = result[':user.property/ProjectStatus'] ||
+              result['user.property/ProjectStatus'];
+
+// BEST - know your context
+const value = result['user.property/ProjectStatus'];  // In results, no ':'
+```
+
+#### Result Structure Variations
+
+**Pull Query Results:**
+
+With `:limit 1`:
+```javascript
+{
+  "data": [
+    {"user.property/Status": {"db/id": 1143}},
+    {"user.property/Status": {"db/id": 1134}},
+    // ... multiple results
+  ]
+}
+```
+
+Access: `data[0]['user.property/Status']` NOT `data[0][0]['user.property/Status']`
+
+**Find Query Results:**
+
+Without pull:
+```clojure
+[:find ?title :where [?b :block/title ?title]]
+```
+
+Returns flat arrays:
+```javascript
+{"data": [["Title 1"], ["Title 2"], ["Title 3"]]}
+```
+
+Access: `data[0][0]` (nested array)
+
+With pull:
+```clojure
+[:find (pull ?b [:block/title]) :where [?b :block/title]]
+```
+
+Returns object arrays:
+```javascript
+{"data": [{"block/title": "Title 1"}, {"block/title": "Title 2"}]}
+```
+
+Access: `data[0]['block/title']` (direct property access)
+
+#### Entity Reference Values
+
+**Query returns:**
+```javascript
+{
+  "user.property/ProjectStatus": {
+    "db/id": 1143
+  }
+}
+```
+
+**Keys to check for entity refs:**
+- `'db/id'` (no colon - most common in results)
+- `':db/id'` (with colon - less common but possible)
+
+**Type Detection:**
+```javascript
+// Check both formats
+if (value && typeof value === 'object' &&
+    (value['db/id'] || value[':db/id'])) {
+  // This is an entity reference
+  valueType = ':db.type/ref';
+}
+```
+
+#### Common Parsing Pitfalls
+
+| Issue | Wrong Code | Correct Code |
+|-------|------------|--------------|
+| Property key prefix | `result[':user.property/X']` | `result['user.property/X']` |
+| Nested array assumption | `data[0][0][key]` | `data[0][key]` |
+| Entity ID key | `value[':db/id']` | `value['db/id'] \|\| value[':db/id']` |
+| Block title key | `block[':block/title']` | `block['block/title']` |
+
+#### Safe Parsing Function
+
+```javascript
+function safeGetProperty(obj, propWithoutColon) {
+  // Try without colon first (most common in results)
+  if (obj[propWithoutColon] !== undefined) {
+    return obj[propWithoutColon];
+  }
+  // Try with colon (rare but possible)
+  if (obj[':' + propWithoutColon] !== undefined) {
+    return obj[':' + propWithoutColon];
+  }
+  return undefined;
+}
+
+// Usage
+const status = safeGetProperty(result, 'user.property/ProjectStatus');
+const dbId = safeGetProperty(value, 'db/id');
+const title = safeGetProperty(block, 'block/title');
+```
+
+#### Real-World Example (Query Builder)
+
+**Problem:** Property dropdown not appearing
+**Root Causes Found:**
+1. Query used `:user.property/X` (correct)
+2. Code tried to access `result[':user.property/X']` (wrong - extra `:`)
+3. Code assumed `data[0][0]` nesting (wrong - flat object array)
+4. Type check looked for `':db/id'` (wrong - no `:` in result keys)
+
+**Solution:**
+```javascript
+// Build query WITH colon prefix
+const queryIdent = propertyIdent.startsWith(':') ?
+                   propertyIdent : `:${propertyIdent}`;
+const query = `[:find (pull ?b [${queryIdent}]) ...]`;
+
+// Parse result WITHOUT colon prefix
+const sampleValue = result.data[0][propertyIdent];  // No ':'!
+
+// Check entity ref WITHOUT assuming colon
+if (sampleValue['db/id'] || sampleValue[':db/id']) {
+  // It's a reference property
+}
+```
+
+---
+
 ### Timestamps
 
 **Format:** Unix timestamp in milliseconds
@@ -832,6 +991,10 @@ logseq mcp-server -g "GRAPH" --stdio  # Stdio transport
 | Syntax error | Wrong quote nesting | Use single quotes for query |
 | "graph not found" | Typo in graph name | Copy exact name from `logseq list` |
 | No results for property | Wrong namespace | Try both `:user.property/` and `:logseq.property/` |
+| "Cannot compare :block/refs to user.property/X" | Missing `:` prefix in query | Add `:` before property ident in query |
+| `undefined` when accessing result property | Used `:` prefix in result access | Remove `:` when accessing result keys |
+| "Cannot read properties of undefined" | Wrong array nesting assumption | Use `data[0][key]` not `data[0][0][key]` for pull queries |
+| Property type incorrectly detected as string | Checked for `':db/id'` with colon | Check both `'db/id'` and `':db/id'` formats |
 
 ---
 
