@@ -28,6 +28,7 @@ Use this skill when you need to:
 **Related skills:**
 - `logseq-db-knowledge` - Understanding Logseq DB structure
 - `logseq-db-plugin-api-skill` - Building Logseq plugins
+- `logseq-schema` (RCmerci) - Authoritative Datascript schema reference for writing Datalog queries
 
 ---
 
