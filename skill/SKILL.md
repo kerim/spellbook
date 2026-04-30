@@ -86,8 +86,7 @@ logseq db import
 ```typescript
 Bash({
   command: 'logseq list',
-  description: "List available Logseq graphs",
-  dangerouslyDisableSandbox: true
+  description: "List available Logseq graphs"
 })
 ```
 
@@ -150,8 +149,7 @@ logseq query -g "GRAPH NAME" -- 'QUERY'
 ```typescript
 Bash({
   command: 'logseq query -g "LSEQ 2025-12-15" -p \'[:find (pull ?b [:block/uuid :block/title]) :where [?b :block/tags ?t] [?t :block/title "contact"]]\'',
-  description: "Find all blocks tagged with 'contact'",
-  dangerouslyDisableSandbox: true
+  description: "Find all blocks tagged with 'contact'"
 })
 ```
 
@@ -184,8 +182,7 @@ logseq search "contact" -g "LSEQ 2025-12-15" -l 50
 ```typescript
 Bash({
   command: 'logseq search "friedman" -g "LSEQ 2025-12-15"',
-  description: "Search for blocks with 'friedman' in title",
-  dangerouslyDisableSandbox: true
+  description: "Search for blocks with 'friedman' in title"
 })
 ```
 
@@ -238,8 +235,7 @@ logseq export -g "LSEQ 2025-12-15" -f "/tmp/claude/export.md"
 ```typescript
 Bash({
   command: 'logseq export -g "LSEQ 2025-12-15" -f "/tmp/claude/logseq-export-$(date +%Y%m%d).md"',
-  description: "Export Logseq graph to Markdown",
-  dangerouslyDisableSandbox: true
+  description: "Export Logseq graph to Markdown"
 })
 ```
 
@@ -589,17 +585,12 @@ logseq query -g "GRAPH" -p '[:find (pull ?b [*]) :where [?b :block/title "test"]
 
 **Error: "unable to open database file"**
 
-**Cause:** Sandbox blocking access to `~/Library/Application Support/Logseq/`
+**Cause:** The graph path is not accessible. Common reasons:
+- Wrong graph name (run `logseq list` to verify)
+- Logseq database is corrupted or moved
+- Graph path has changed since last use
 
-**Solution:** Add `dangerouslyDisableSandbox: true` to Bash tool call
-
-```typescript
-Bash({
-  command: 'logseq query -g "GRAPH" -p \'[:find ...]\'',
-  description: "Query Logseq",
-  dangerouslyDisableSandbox: true  // ← ADD THIS
-})
-```
+**Solution:** Verify the graph name with `logseq list` and use the exact string in `-g`.
 
 **Important:** The Logseq desktop app does NOT need to be closed. The CLI can access databases regardless of whether the app is running.
 
@@ -981,7 +972,7 @@ logseq mcp-server -g "GRAPH" --stdio  # Stdio transport
 |-------|-------|----------|
 | Empty results `()` | Missing `-p` flag | Add `-p` to command |
 | Empty results `()` | Wrong graph name | Run `logseq list` to verify |
-| "unable to open database file" | Sandbox blocking access | Add `dangerouslyDisableSandbox: true` |
+| "unable to open database file" | Wrong/moved graph path | Run `logseq list` and verify graph name |
 | Syntax error | Wrong quote nesting | Use single quotes for query |
 | "graph not found" | Typo in graph name | Copy exact name from `logseq list` |
 | No results for property | Wrong namespace | Try both `:user.property/` and `:logseq.property/` |
@@ -999,7 +990,6 @@ Before executing a query in code:
 - [ ] Tested query with CLI first using `logseq query`
 - [ ] Verified graph name with `logseq list`
 - [ ] Used `-p` flag for readable output
-- [ ] Added `dangerouslyDisableSandbox: true` in Claude Code
 - [ ] Quoted graph name and query correctly
 - [ ] Verified results are non-empty
 

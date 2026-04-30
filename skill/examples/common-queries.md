@@ -236,8 +236,10 @@ logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?b [*]) :where (or-join [?b] 
 
 Combined with status filter (tested pattern from logseq task viewer):
 ```bash
-logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?b [:block/uuid :block/title :logseq.property/status :logseq.property/priority]) :where (or-join [?b] (and [?b :block/tags ?t] [?t :block/title "Task"]) (and [?b :block/tags ?child] [?child :logseq.property.class/extends ?parent] [?parent :block/title "Task"])) [?b :logseq.property/status ?s] [?s :block/title "Todo"]]'
+logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?b [:block/uuid :block/title {:logseq.property/status [:block/title]} {:logseq.property/priority [:block/title]}]) :where (or-join [?b] (and [?b :block/tags ?t] [?t :block/title "Task"]) (and [?b :block/tags ?child] [?child :logseq.property.class/extends ?parent] [?parent :block/title "Task"])) [?b :logseq.property/status ?s] [?s :block/title "Todo"]]'
 ```
+
+Note: Nested pull specs `{:attr [:block/title]}` resolve ref attributes to their titles inline, avoiding `{:db/id N}` in results.
 
 ---
 
