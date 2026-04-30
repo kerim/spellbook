@@ -7,7 +7,7 @@ A collection of copy-paste ready query patterns for common use cases.
 All examples assume:
 - Graph name: `"LSEQ 2025-12-15"` (replace with your graph)
 - Using `-p` flag for readable output
-- Running in Claude Code with `dangerouslyDisableSandbox: true`
+- Running in Claude Code (no `dangerouslyDisableSandbox` needed — `/Users/niyaro/logseq` is in `sandbox.filesystem.allowWrite`)
 
 ## Basic Queries
 
@@ -133,6 +133,110 @@ logseq query -g "LSEQ 2025-12-15" -p '[:find ?b ?val :where [?b :user.property/S
 
 ```bash
 logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?b [*]) :where [?b :user.property/Priority ?p] [(> ?p 5)]]'
+```
+
+---
+
+## Property Schema Discovery
+
+Properties in DB graphs have types. **Reference properties** (`:db.type/ref`) store entity IDs, not strings — querying them with a plain string match returns nothing. Discover a property's type before querying it.
+
+### Get Schema for a Specific Property
+
+```bash
+logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?p [:db/ident :db/valueType :db/cardinality :block/title]) :where (or [?p :db/ident :user.property/status] [?p :db/ident :logseq.property/status])]'
+```
+
+Key fields returned:
+- `db/valueType` — `:db.type/string`, `:db.type/ref`, `:db.type/number`, `:db.type/boolean`, `:db.type/instant`
+- `db/cardinality` — `:db.cardinality/one` (single value) or `:db.cardinality/many` (multiple values)
+
+### Discover All User Property Schemas
+
+```bash
+logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?p [:db/ident :db/valueType :db/cardinality :block/title]) :where [?p :db/ident ?ident] [(namespace ?ident) ?ns] [(= ?ns "user.property")]]'
+```
+
+### Get All Possible Values for a Reference Property
+
+For `:db.type/ref` properties (e.g. status, priority), fetch the actual options:
+
+```bash
+logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?val [:block/title]) :where [_ :logseq.property/status ?val]]'
+```
+
+### Get a Tag's Associated Properties
+
+```bash
+logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?tag [:logseq.property.class/properties]) :where [?tag :block/title "Task"]]'
+```
+
+---
+
+## Type-Aware Property Queries
+
+### Reference Property (`:db.type/ref`) — Entity Join Required
+
+**Wrong** — returns nothing because status values are entities, not strings:
+```bash
+logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?b [*]) :where [?b :logseq.property/status "Todo"]]'
+```
+
+**Correct** — join through the entity to get its title:
+```bash
+logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?b [*]) :where [?b :logseq.property/status ?s] [?s :block/title "Todo"]]'
+```
+
+Multi-cardinality reference (OR across multiple values):
+```bash
+logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?b [*]) :where [?b :logseq.property/priority ?p] (or [?p :block/title "High"] [?p :block/title "Urgent"])]'
+```
+
+Try both namespaces when the property might be user-defined or built-in:
+```bash
+logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?b [*]) :where (or-join [?b] (and [?b :user.property/status ?s] [?s :block/title "Done"]) (and [?b :logseq.property/status ?s] [?s :block/title "Done"]))]'
+```
+
+### Number Property (`:db.type/number`) — Use Comparison Operators
+
+```bash
+logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?b [*]) :where [?b :user.property/year ?n] [(> ?n 2020)]]'
+```
+
+Bind result first when combining comparisons (avoids predicate nesting errors):
+```bash
+logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?b [*]) :where [?b :user.property/year ?n] [(>= ?n 2020)] [(<= ?n 2025)]]'
+```
+
+### Boolean Property (`:db.type/boolean`) — Use `true`/`false` Literals
+
+```bash
+logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?b [*]) :where [?b :user.property/published true]]'
+```
+
+### Property Type Reference Table
+
+| `:db/valueType` | Example usage | Query pattern |
+|---|---|---|
+| `:db.type/string` | `"Project Title"` | `[?b :prop "value"]` |
+| `:db.type/ref` | Status, Priority (entity) | `[?b :prop ?ref] [?ref :block/title "value"]` |
+| `:db.type/number` | Year, count | `[?b :prop ?n] [(> ?n 2020)]` |
+| `:db.type/boolean` | Published, done | `[?b :prop true]` |
+| `:db.type/instant` | Timestamps (ms) | `[?b :prop ?d] [(> ?d 1735689600000)]` |
+
+---
+
+## Tag Class Inheritance
+
+Find blocks tagged directly OR tagged with any subclass that extends a parent class. Useful for task systems where `#Bug`, `#Feature`, etc. extend `#Task`.
+
+```bash
+logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?b [*]) :where (or-join [?b] (and [?b :block/tags ?t] [?t :block/title "Task"]) (and [?b :block/tags ?child] [?child :logseq.property.class/extends ?parent] [?parent :block/title "Task"]))]'
+```
+
+Combined with status filter (tested pattern from logseq task viewer):
+```bash
+logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?b [:block/uuid :block/title :logseq.property/status :logseq.property/priority]) :where (or-join [?b] (and [?b :block/tags ?t] [?t :block/title "Task"]) (and [?b :block/tags ?child] [?child :logseq.property.class/extends ?parent] [?parent :block/title "Task"])) [?b :logseq.property/status ?s] [?s :block/title "Todo"]]'
 ```
 
 ---
@@ -297,7 +401,6 @@ logseq query -g "LSEQ 2025-12-15" -p '[:find ?prop :where [?b ?prop] [(namespace
 Bash({
   command: 'logseq query -g "LSEQ 2025-12-15" -p \'[:find (pull ?b [*]) :where [?b :block/tags ?t] [?t :block/title "contact"]]\'',
   description: "Find all contacts in Logseq",
-  dangerouslyDisableSandbox: true
 })
 ```
 
@@ -307,7 +410,6 @@ Bash({
 Bash({
   command: 'logseq search "friedman" -g "LSEQ 2025-12-15" -l 10',
   description: "Search for 'friedman' (limit 10 results)",
-  dangerouslyDisableSandbox: true
 })
 ```
 
@@ -317,7 +419,6 @@ Bash({
 Bash({
   command: 'logseq query -g "LSEQ 2025-12-15" -p \'[:find (pull ?b [:block/uuid :block/title]) :where [?b :block/title]]\' | head -20',
   description: "Get first 20 pages from Logseq",
-  dangerouslyDisableSandbox: true
 })
 ```
 
@@ -441,13 +542,6 @@ logseq query -g LSEQ 2025-12-15  # Fails
 logseq query -g "GRAPH" -p "[:find (pull ?b [*]) :where [?b :block/title "test"]]"  # Syntax error
 ```
 
-❌ **Not using dangerouslyDisableSandbox in Claude Code:**
-```typescript
-Bash({
-  command: 'logseq query ...',
-  description: "Query"
-  // Missing: dangerouslyDisableSandbox: true
-})
-```
-
 ✅ **Correct patterns are shown in examples above**
+
+> **Sandbox note:** `dangerouslyDisableSandbox` is no longer needed — `/Users/niyaro/logseq` is pre-allowed in `~/.claude/settings.json`.

@@ -36,25 +36,16 @@ Use this skill when you need to:
 
 ### Sandbox Configuration
 
-**MANDATORY: All Logseq CLI commands require `dangerouslyDisableSandbox: true`**
-
-The Logseq CLI needs read access to `~/Library/Application Support/Logseq/` to access database files. This location is blocked by Claude Code's default sandbox.
-
-**Why this is safe:**
-- Logseq CLI is a read-only query tool
-- No network access required for local queries
-- No destructive operations (unless using import/export explicitly)
-- Similar to using `dangerouslyDisableSandbox` for npm/pnpm install
+**No `dangerouslyDisableSandbox` needed** — `/Users/niyaro/logseq` is in `sandbox.filesystem.allowWrite` in `~/.claude/settings.json`, and `logseq` is in `sandbox.excludedCommands`. The CLI runs sandboxed without bypass.
 
 ### Bash Tool Pattern
 
-**Always use this pattern in Claude Code:**
+**Standard pattern in Claude Code:**
 
 ```typescript
 Bash({
   command: 'logseq query -g "LSEQ 2025-12-15" -p \'[:find (pull ?b [*]) :where [?b :block/title]]\'',
-  description: "Query Logseq graph for all blocks with titles",
-  dangerouslyDisableSandbox: true  // REQUIRED for database access
+  description: "Query Logseq graph for all blocks with titles"
 })
 ```
 
@@ -695,6 +686,8 @@ logseq query -g "GRAPH" -p '137'  # Query by db/id
    [?b :logseq.property/PropertyName ?val])]
 ```
 
+**CRITICAL — Reference properties need entity joins:** Properties with `:db.type/ref` store entity IDs, not strings. Querying `[?b :prop "Done"]` returns nothing. Use `[?b :prop ?ref] [?ref :block/title "Done"]` instead. See `examples/common-queries.md` → "Property Schema Discovery" and "Type-Aware Property Queries" for discovery queries and all type patterns.
+
 ---
 
 ### Query Result Format Quirks (CRITICAL for Parsing)
@@ -1046,8 +1039,7 @@ logseq show "GRAPH"
 ```typescript
 Bash({
   command: 'logseq query -g "GRAPH NAME" -p \'QUERY HERE\'',
-  description: "Describe what this query does",
-  dangerouslyDisableSandbox: true
+  description: "Describe what this query does"
 })
 ```
 
@@ -1056,8 +1048,7 @@ Bash({
 ```typescript
 Bash({
   command: 'logseq query -g "LSEQ 2025-12-15" -p \'[:find (pull ?b [:block/uuid :block/title]) :where [?b :block/title]]\'',
-  description: "Query all blocks with titles",
-  dangerouslyDisableSandbox: true
+  description: "Query all blocks with titles"
 })
 ```
 
@@ -1101,7 +1092,7 @@ Bash({
 
 ## Important Notes
 
-1. **Sandbox requirement:** ALWAYS use `dangerouslyDisableSandbox: true` in Claude Code
+1. **Sandbox:** No bypass needed — `/Users/niyaro/logseq` is pre-allowed in `~/.claude/settings.json`
 2. **Critical syntax:** Use `-p` flag, NOT `--` separator
 3. **Graph names:** Case-sensitive, use exact names from `logseq list`
 4. **App status:** CLI works whether or not Logseq app is running
