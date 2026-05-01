@@ -1,0 +1,12 @@
+{
+  "name": "logseq-cli-skill",
+  "owner": { "name": "P. Kerim Friedman" },
+  "description": "Claude Code skills for working with Logseq DB graphs",
+  "plugins": [
+    {
+      "name": "logseq-cli",
+      "source": "./plugins/logseq-cli",
+      "description": "Query Logseq DB graphs via @logseq/cli — syntax, result parsing, and property type patterns"
+    }
+  ]
+}

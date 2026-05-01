@@ -1,0 +1,9 @@
+{
+  "name": "logseq-cli",
+  "version": "1.0.0",
+  "description": "Claude Code skill for querying Logseq DB graphs via @logseq/cli.",
+  "author": { "name": "P. Kerim Friedman" },
+  "homepage": "https://github.com/kerim/logseq-cli-skill",
+  "license": "MIT",
+  "skills": "./skills"
+}
