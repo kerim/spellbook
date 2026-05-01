@@ -36,7 +36,7 @@ Use this skill when you need to:
 
 ### Sandbox Configuration
 
-**No `dangerouslyDisableSandbox` needed** — `/Users/niyaro/logseq` is in `sandbox.filesystem.allowWrite` in `~/.claude/settings.json`, and `logseq` is in `sandbox.excludedCommands`. The CLI runs sandboxed without bypass.
+**No `dangerouslyDisableSandbox` needed** if your logseq graph path is added to `sandbox.filesystem.allowWrite` in `~/.claude/settings.json` and `logseq` is in `sandbox.excludedCommands`. The CLI then runs sandboxed without bypass. If not configured, add your graph directory (e.g. `~/logseq`) to the allowlist.
 
 ### Bash Tool Pattern
 
@@ -137,7 +137,7 @@ logseq query -g "GRAPH NAME" -- 'QUERY'
 
 2. **Entity Query (by UUID):**
    ```bash
-   logseq query -g "LSEQ 2025-12-15" -p '681eb44c-27ae-4c56-a5e5-109219ad8466'
+   logseq query -g "LSEQ 2025-12-15" -p 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
    ```
 
 3. **Entity Query (by db/id):**
@@ -181,8 +181,8 @@ logseq search "contact" -g "LSEQ 2025-12-15" -l 50
 **Claude Code Example:**
 ```typescript
 Bash({
-  command: 'logseq search "friedman" -g "LSEQ 2025-12-15"',
-  description: "Search for blocks with 'friedman' in title"
+  command: 'logseq search "search term" -g "LSEQ 2025-12-15"',
+  description: "Search for blocks matching 'search term'"
 })
 ```
 
@@ -389,7 +389,7 @@ This finds all blocks:
 
 **By UUID:**
 ```bash
-logseq query -g "GRAPH" -p '681eb44c-27ae-4c56-a5e5-109219ad8466'
+logseq query -g "GRAPH" -p 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
 ```
 
 **By db/id:**
@@ -602,7 +602,7 @@ logseq query -g "GRAPH" -p '[:find (pull ?b [*]) :where [?b :block/title "test"]
 
 **Example result:**
 ```clojure
-{:block/uuid #uuid "681eb44c-27ae-4c56-a5e5-109219ad8466",
+{:block/uuid #uuid "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx",
  :block/title "Leyla Erlinda Friedman",
  :block/created-at 1746842700308,
  :block/updated-at 1749344667454,
@@ -884,7 +884,7 @@ Based on the `@logseq/cli` source code (v0.4.2):
 
 **Entity Queries:**
 - Accept multiple formats:
-  - UUID string: `"681eb44c-27ae-4c56-a5e5-109219ad8466"`
+  - UUID string: `"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"`
   - Integer db/id: `1108`
   - EDN `:db/ident` keyword: `:logseq.class/Tag`
 - Resolved via `datascript.core/entity`
@@ -1082,7 +1082,7 @@ Bash({
 
 ## Important Notes
 
-1. **Sandbox:** No bypass needed — `/Users/niyaro/logseq` is pre-allowed in `~/.claude/settings.json`
+1. **Sandbox:** No bypass needed if your graph path is in `sandbox.filesystem.allowWrite` in `~/.claude/settings.json`
 2. **Critical syntax:** Use `-p` flag, NOT `--` separator
 3. **Graph names:** Case-sensitive, use exact names from `logseq list`
 4. **App status:** CLI works whether or not Logseq app is running

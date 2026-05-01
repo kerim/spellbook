@@ -7,7 +7,7 @@ A collection of copy-paste ready query patterns for common use cases.
 All examples assume:
 - Graph name: `"LSEQ 2025-12-15"` (replace with your graph)
 - Using `-p` flag for readable output
-- Running in Claude Code (no `dangerouslyDisableSandbox` needed — `/Users/niyaro/logseq` is in `sandbox.filesystem.allowWrite`)
+- Running in Claude Code (no `dangerouslyDisableSandbox` needed if your graph path is in `sandbox.filesystem.allowWrite` in `~/.claude/settings.json`)
 
 ## Basic Queries
 
@@ -26,13 +26,13 @@ logseq query -g "LSEQ 2025-12-15" -p '[:find (pull ?b [:block/uuid :block/title]
 ### Get Single Block by UUID
 
 ```bash
-logseq query -g "LSEQ 2025-12-15" -p '681eb44c-27ae-4c56-a5e5-109219ad8466'
+logseq query -g "LSEQ 2025-12-15" -p 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx'
 ```
 
 ### Get Multiple Blocks by UUID
 
 ```bash
-logseq query -g "LSEQ 2025-12-15" -p '681eb44c-27ae-4c56-a5e5-109219ad8466 681fd43a-c9ab-4059-9515-3a5248992b8e'
+logseq query -g "LSEQ 2025-12-15" -p 'xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx yyyyyyyy-yyyy-yyyy-yyyy-yyyyyyyyyyyy'
 ```
 
 ---
@@ -410,8 +410,8 @@ Bash({
 
 ```typescript
 Bash({
-  command: 'logseq search "friedman" -g "LSEQ 2025-12-15" -l 10',
-  description: "Search for 'friedman' (limit 10 results)",
+  command: 'logseq search "search term" -g "LSEQ 2025-12-15" -l 10',
+  description: "Search for 'search term' (limit 10 results)",
 })
 ```
 
@@ -546,4 +546,4 @@ logseq query -g "GRAPH" -p "[:find (pull ?b [*]) :where [?b :block/title "test"]
 
 ✅ **Correct patterns are shown in examples above**
 
-> **Sandbox note:** `dangerouslyDisableSandbox` is no longer needed — `/Users/niyaro/logseq` is pre-allowed in `~/.claude/settings.json`.
+> **Sandbox note:** `dangerouslyDisableSandbox` is not needed if your graph path is in `sandbox.filesystem.allowWrite` in `~/.claude/settings.json`.
