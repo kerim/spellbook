@@ -1,19 +1,38 @@
-# claude-plugins
+# spellbook
 
-A Claude Code plugin marketplace by P. Kerim Friedman. Currently includes a skill for querying [Logseq](https://logseq.com) DB graphs via `@logseq/cli` — teaches Claude how to write Datalog queries against Logseq's DataScript database, parse EDN/JSON output, handle property types and tag inheritance, and build practical pipelines without opening Logseq Desktop.
+A Claude Code plugin marketplace by P. Kerim Friedman.
 
-## Installation
+## Plugins
+
+| Plugin | Description |
+|--------|-------------|
+| [logseq-cli](plugins/logseq-cli/) | Query Logseq DB graphs via `@logseq/cli` |
+
+---
+
+## logseq-cli
+
+A skill that teaches Claude how to query [Logseq](https://logseq.com) DB graphs via `@logseq/cli` — writing Datalog queries against Logseq's DataScript database, parsing EDN/JSON output, handling property types and tag inheritance, and building practical pipelines without opening Logseq Desktop.
+
+### Installation
+
+First, register this marketplace with Claude Code (one-time setup):
 
 ```
 /plugin marketplace add kerim/spellbook
+```
+
+Then install the logseq-cli plugin from it:
+
+```
 /plugin install logseq-cli@spellbook
 ```
 
 Once installed, invoke the skill as `/logseq-cli:logseq-cli`.
 
-## Sandbox configuration
+### Sandbox configuration
 
-`@logseq/cli` needs read access to your Logseq graph directory. Add the path to your graph to `~/.claude/settings.json`:
+`@logseq/cli` needs permission to run and access your graph directory. Add to `~/.claude/settings.json`:
 
 ```json
 {
@@ -28,7 +47,7 @@ Once installed, invoke the skill as `/logseq-cli:logseq-cli`.
 
 Your graph directory also needs to be in the filesystem allowlist. Run `! claude /sandbox` to manage sandbox settings.
 
-## Usage
+### Usage
 
 Ask Claude anything that involves reading your Logseq graph:
 
@@ -46,11 +65,11 @@ The skill covers:
 - Parsing EDN output with `jet` or the `-p` flag
 - Troubleshooting common errors
 
-## Examples
+### Examples
 
 See [`plugins/logseq-cli/skills/logseq-cli/examples/common-queries.md`](plugins/logseq-cli/skills/logseq-cli/examples/common-queries.md) for copy-paste query patterns.
 
-## Requirements
+### Requirements
 
 - [`@logseq/cli`](https://github.com/logseq/logseq/tree/master/packages/logseq-cli) v4+
 - [`jet`](https://github.com/borkdude/jet) (for EDN → JSON conversion)
