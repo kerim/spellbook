@@ -1,12 +1,12 @@
-# logseq-cli-skill
+# claude-plugins
 
-A Claude Code skill for querying [Logseq](https://logseq.com) DB graphs via `@logseq/cli`. It teaches Claude how to write Datalog queries against Logseq's DataScript database, parse EDN/JSON output, handle property types and tag inheritance, and build practical pipelines — without opening Logseq Desktop.
+A Claude Code plugin marketplace by P. Kerim Friedman. Currently includes a skill for querying [Logseq](https://logseq.com) DB graphs via `@logseq/cli` — teaches Claude how to write Datalog queries against Logseq's DataScript database, parse EDN/JSON output, handle property types and tag inheritance, and build practical pipelines without opening Logseq Desktop.
 
 ## Installation
 
 ```
-/plugin marketplace add kerim/logseq-cli-skill
-/plugin install logseq-cli@logseq-cli-skill
+/plugin marketplace add kerim/claude-plugins
+/plugin install logseq-cli@claude-plugins
 ```
 
 Once installed, invoke the skill as `/logseq-cli:logseq-cli`.
