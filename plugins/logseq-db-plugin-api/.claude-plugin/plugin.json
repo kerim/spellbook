@@ -1,0 +1,9 @@
+{
+  "name": "logseq-db-plugin-api",
+  "version": "2.2.0",
+  "description": "Essential knowledge for developing Logseq plugins for DB (database) graphs.",
+  "author": { "name": "P. Kerim Friedman" },
+  "homepage": "https://github.com/kerim/spellbook",
+  "license": "MIT",
+  "skills": "./skills"
+}

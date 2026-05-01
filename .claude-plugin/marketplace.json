@@ -7,6 +7,11 @@
       "name": "logseq-cli",
       "source": "./plugins/logseq-cli",
       "description": "Query Logseq DB graphs via @logseq/cli — syntax, result parsing, and property type patterns"
+    },
+    {
+      "name": "logseq-db-plugin-api",
+      "source": "./plugins/logseq-db-plugin-api",
+      "description": "Build Logseq plugins for DB graphs — core APIs, event handling, tag detection, property management, Datalog patterns"
     }
   ]
 }
