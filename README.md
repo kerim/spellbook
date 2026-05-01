@@ -5,8 +5,8 @@ A Claude Code plugin marketplace by P. Kerim Friedman. Currently includes a skil
 ## Installation
 
 ```
-/plugin marketplace add kerim/claude-plugins
-/plugin install logseq-cli@claude-plugins
+/plugin marketplace add kerim/spellbook
+/plugin install logseq-cli@spellbook
 ```
 
 Once installed, invoke the skill as `/logseq-cli:logseq-cli`.

@@ -1,5 +1,5 @@
 {
-  "name": "claude-plugins",
+  "name": "spellbook",
   "owner": { "name": "P. Kerim Friedman" },
   "description": "Claude Code skills for working with Logseq DB graphs",
   "plugins": [
