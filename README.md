@@ -31,9 +31,11 @@ A skill that teaches Claude how to query [Logseq](https://logseq.com) DB graphs 
 
 Once installed, invoke the skill as `/logseq-cli:logseq-cli`.
 
-### Sandbox configuration
+### Sandbox configuration (Claude Code on macOS)
 
-`@logseq/cli` needs permission to run and access your graph directory. Add to `~/.claude/settings.json`:
+`@logseq/cli` is more than a CLI — it spawns a long-lived `db-worker-node` daemon that holds the SQLite connection and exposes it over loopback HTTP on 127.0.0.1. Claude Code's macOS sandbox blocks the daemon's `bind()` call by default, so commands fail with `db-worker-node failed to publish health` before any output appears.
+
+Add the following to `~/.claude/settings.json`:
 
 ```json
 {
@@ -42,11 +44,27 @@ Once installed, invoke the skill as `/logseq-cli:logseq-cli`.
       "Bash(logseq:*)",
       "Bash(jet:*)"
     ]
+  },
+  "sandbox": {
+    "network": {
+      "allowLocalBinding": true
+    },
+    "filesystem": {
+      "allowWrite": ["/Users/YOU/logseq"]
+    }
   }
 }
 ```
 
-Your graph directory also needs to be in the filesystem allowlist. Run `! claude /sandbox` to manage sandbox settings.
+`allowLocalBinding` is the load-bearing setting. It relaxes Seatbelt's loopback-bind rule only — non-loopback bind stays blocked, so it's much narrower than `dangerouslyDisableSandbox: true`. The graph directory in `allowWrite` is for the daemon's `server-list` discovery file and per-graph log files at `~/logseq/graphs/<graph>/db-worker-node-*.log`.
+
+**Settings that do NOT fix this — don't bother:**
+
+- `excludedCommands` only matches the immediate command. The daemon is a child process and inherits the sandbox policy regardless.
+- `allowAllUnixSockets` is documented as Linux/WSL2-only and is a no-op on macOS.
+- `dangerouslyDisableSandbox: true` works but prompts on every call. `allowLocalBinding` is persistent and applies to the whole process tree.
+
+Run `! claude /sandbox` to inspect sandbox settings interactively.
 
 ### Usage
 

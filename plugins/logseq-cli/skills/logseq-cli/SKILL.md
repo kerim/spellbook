@@ -36,7 +36,22 @@ Use this skill when you need to:
 
 ### Sandbox Configuration
 
-**No `dangerouslyDisableSandbox` needed** if your logseq graph path is added to `sandbox.filesystem.allowWrite` in `~/.claude/settings.json` and `logseq` is in `sandbox.excludedCommands`. The CLI then runs sandboxed without bypass. If not configured, add your graph directory (e.g. `~/logseq`) to the allowlist.
+The CLI spawns a `db-worker-node` daemon that binds an HTTP server on 127.0.0.1 for IPC. Claude Code's macOS sandbox blocks loopback `bind()` by default, so the daemon fails before the CLI returns. Required settings in `~/.claude/settings.json`:
+
+```json
+{
+  "sandbox": {
+    "network": {
+      "allowLocalBinding": true
+    },
+    "filesystem": {
+      "allowWrite": ["/Users/YOU/logseq"]
+    }
+  }
+}
+```
+
+**If `logseq` commands fail with `Error (server-start-failed): db-worker-node failed to publish health`, connection-refused on 127.0.0.1, or `EPERM`/`EACCES` on `bind()`, the user is missing `allowLocalBinding: true`.** Stop and surface this to the user. Do NOT work around it with `dangerouslyDisableSandbox` (brittle, prompts every call), `excludedCommands` (doesn't propagate to the daemon child), or `allowAllUnixSockets` (no-op on macOS — wrong knob). See README "Sandbox configuration" for the full explanation.
 
 ### Bash Tool Pattern
 
@@ -1082,7 +1097,7 @@ Bash({
 
 ## Important Notes
 
-1. **Sandbox:** No bypass needed if your graph path is in `sandbox.filesystem.allowWrite` in `~/.claude/settings.json`
+1. **Sandbox:** Requires `sandbox.network.allowLocalBinding: true` AND graph path in `sandbox.filesystem.allowWrite` in `~/.claude/settings.json`. See "Claude Code Integration" above.
 2. **Critical syntax:** Use `-p` flag, NOT `--` separator
 3. **Graph names:** Case-sensitive, use exact names from `logseq list`
 4. **App status:** CLI works whether or not Logseq app is running

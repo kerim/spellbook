@@ -1,7 +1,7 @@
 {
   "name": "spellbook",
   "owner": { "name": "P. Kerim Friedman" },
-  "description": "Claude Code skills for working with Logseq DB graphs",
+  "description": "Claude Code Plugin Marketplace",
   "plugins": [
     {
       "name": "logseq-cli",
